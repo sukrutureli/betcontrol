@@ -134,41 +134,47 @@ public class MatchScraper {
 	    return scores;
 	}
 
-	/**
-	 * Gece 00:00'dan sonra çalıştırıldığında "dün" sekmesine tıklar.
-	 * Diğer zamanlarda hiçbir şey yapmaz.
-	 */
 	private void clickYesterdayTabIfNeeded(WebDriver driver) {
 	    try {
 	        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
-
-	        // Menü tamamen yüklensin
 	        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".live-result-menu")));
 	        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//span[contains(.,'Bugün')]")));
 
 	        WebElement todayTab = driver.findElement(By.xpath("//span[contains(.,'Bugün')]"));
 
-	        // İstanbul saatine göre 00:00-06:00 arası "dün" sekmesini seç
+	        // İstanbul saatine göre 00:00–06:00 arası dünü seç
 	        LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
 	        if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
-	            WebElement previousTab = todayTab.findElement(
-	                    By.xpath("preceding-sibling::span[contains(@class,'tab')][1]")
-	            );
 
-	            ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", previousTab);
-	            new WebDriverWait(driver, Duration.ofSeconds(5))
-	                    .until(ExpectedConditions.elementToBeClickable(previousTab));
+	            // En yakın aktif (disabled olmayan) önceki sekmeyi bul
+	            List<WebElement> siblings = driver.findElements(By.xpath("//span[contains(@class,'tab') and not(contains(@class,'disabled'))]"));
+	            WebElement prevTab = null;
 
-	            previousTab.click();
-	            Thread.sleep(2000); // Sayfa verilerini güncellemesi için bekle
+	            for (int i = 0; i < siblings.size(); i++) {
+	                if (siblings.get(i).getText().contains("Bugün") && i > 0) {
+	                    prevTab = siblings.get(i - 1);
+	                    break;
+	                }
+	            }
 
-	            System.out.println("⏪ Dün sekmesine geçildi.");
+	            if (prevTab != null) {
+	                ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", prevTab);
+	                Thread.sleep(500);
+
+	                // 👇 JS ile tıklama — intercept hatalarını engeller
+	                ((JavascriptExecutor) driver).executeScript("arguments[0].click();", prevTab);
+
+	                Thread.sleep(2000);
+	                System.out.println("⏪ Dün sekmesine geçildi (JS click ile).");
+	            } else {
+	                System.out.println("⚠️ Önceki aktif sekme bulunamadı (muhtemelen zaten dün).");
+	            }
 	        } else {
 	            System.out.println("📅 Bugün sekmesi aktif, değişiklik yapılmadı.");
 	        }
 
 	    } catch (Exception e) {
-	        System.out.println("⚠️ Dün sekmesi seçilemedi: " + e.getMessage());
+	        System.out.println("⚠️ Dün sekmesi seçilemedi (JS click): " + e.getMessage());
 	    }
 	}
 	
