@@ -35,10 +35,10 @@ public class MatchScraper {
 	// =============================================================
 	// CANLI SKOR (BİTMİŞ MAÇLAR) ÇEK
 	// =============================================================
-	public Map<String, String> fetchFinishedScores(String type) {
+	public Map<String, String> fetchFinishedScores() {
 		Map<String, String> scores = new HashMap<>();
 		try {
-			String url = "https://www.nesine.com/iddaa/canli-skor/" + type;
+			String url = "https://www.nesine.com/iddaa/canli-skor/futbol";
 			driver.get(url);
 			clickYesterdayTabIfNeeded(driver);
 			wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("li.match-not-play")));
@@ -84,6 +84,54 @@ public class MatchScraper {
 			System.out.println("fetchFinishedScores hata: " + e.getMessage());
 		}
 		return scores;
+	}
+	
+	public Map<String, String> fetchFinishedScoresBasket() {
+	    Map<String, String> scores = new HashMap<>();
+	    try {
+	        String url = "https://www.nesine.com/iddaa/canli-skor/basketbol";
+	        driver.get(url);
+	        clickYesterdayTabIfNeeded(driver);
+
+	        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+	        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".match-list.basketbol")));
+
+	        Thread.sleep(2000); // Dinamik içerik yüklenmesi için kısa bekleme
+
+	        // Tüm bitmiş maçları bul
+	        List<WebElement> finishedMatches = driver.findElements(
+	                By.cssSelector("li.match-not-play.unliveData .statusLive.status.finished")
+	        );
+
+	        System.out.println("Bitmiş maç sayısı (basketbol): " + finishedMatches.size());
+
+	        for (WebElement status : finishedMatches) {
+	            try {
+	                // Ana <li> elementine geri dön
+	                WebElement match = status.findElement(By.xpath("./ancestor::li[contains(@class,'match-not-play')]"));
+
+	                String home = safeText(match.findElement(By.cssSelector(".home-team span[aria-hidden='true']")));
+	                String away = safeText(match.findElement(By.cssSelector(".away-team span[aria-hidden='true']")));
+
+	                // Skor
+	                WebElement board = match.findElement(By.cssSelector(".board"));
+	                String homeScore = safeText(board.findElement(By.cssSelector(".home-score")));
+	                String awayScore = safeText(board.findElement(By.cssSelector(".away-score")));
+	                String score = homeScore + "-" + awayScore;
+
+	                String key = home + " - " + away;
+	                scores.put(key, score);
+	                System.out.println("🏀 " + key + " → " + score);
+
+	            } catch (Exception e) {
+	                System.out.println("⚠️ Basketbol maçında hata: " + e.getMessage());
+	            }
+	        }
+
+	    } catch (Exception e) {
+	        System.out.println("fetchFinishedScoresBasket hata: " + e.getMessage());
+	    }
+	    return scores;
 	}
 
 	/**

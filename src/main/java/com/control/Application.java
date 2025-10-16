@@ -9,7 +9,7 @@ public class Application {
 		try {
 			scraper = new MatchScraper();
 			
-			Map<String, String> updatedScores = scraper.fetchFinishedScores("futbol");
+			Map<String, String> updatedScores = scraper.fetchFinishedScores();
 			
 			System.out.println("----- Güncellenen Skorlar (" + updatedScores.size() + ") -----");
 			for (Map.Entry<String, String> entry : updatedScores.entrySet()) {
@@ -21,7 +21,7 @@ public class Application {
 			
 			//Basketbol
 			
-			Map<String, String> updatedScoresBasketbol = scraper.fetchFinishedScores("basketbol");
+			Map<String, String> updatedScoresBasketbol = scraper.fetchFinishedScoresBasket();
 			
 			System.out.println("----- Güncellenen Skorlar (" + updatedScoresBasketbol.size() + ") -----");
 			for (Map.Entry<String, String> entry : updatedScoresBasketbol.entrySet()) {
