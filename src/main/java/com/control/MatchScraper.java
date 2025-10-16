@@ -103,7 +103,7 @@ public class MatchScraper {
 
 	        // İstanbul saatine göre 00:00-06:00 arası "dün" sekmesini seç
 	        LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
-	        if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
+	        //if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
 	            WebElement previousTab = todayTab.findElement(
 	                    By.xpath("preceding-sibling::span[contains(@class,'tab')][1]")
 	            );
@@ -116,9 +116,9 @@ public class MatchScraper {
 	            Thread.sleep(2000); // Sayfa verilerini güncellemesi için bekle
 
 	            System.out.println("⏪ Dün sekmesine geçildi.");
-	        } else {
-	            System.out.println("📅 Bugün sekmesi aktif, değişiklik yapılmadı.");
-	        }
+	        //} else {
+	          //  System.out.println("📅 Bugün sekmesi aktif, değişiklik yapılmadı.");
+	        //}
 
 	    } catch (Exception e) {
 	        System.out.println("⚠️ Dün sekmesi seçilemedi: " + e.getMessage());
