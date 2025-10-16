@@ -7,7 +7,6 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.time.*;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -36,10 +35,10 @@ public class MatchScraper {
 	// =============================================================
 	// CANLI SKOR (BİTMİŞ MAÇLAR) ÇEK
 	// =============================================================
-	public Map<String, String> fetchFinishedScores() {
+	public Map<String, String> fetchFinishedScores(String type) {
 		Map<String, String> scores = new HashMap<>();
 		try {
-			String url = "https://www.nesine.com/iddaa/canli-skor/futbol";
+			String url = "https://www.nesine.com/iddaa/canli-skor/" + type;
 			driver.get(url);
 			clickYesterdayTabIfNeeded(driver);
 			wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("li.match-not-play")));
@@ -103,7 +102,7 @@ public class MatchScraper {
 
 	        // İstanbul saatine göre 00:00-06:00 arası "dün" sekmesini seç
 	        LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
-	        //if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
+	        if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
 	            WebElement previousTab = todayTab.findElement(
 	                    By.xpath("preceding-sibling::span[contains(@class,'tab')][1]")
 	            );
@@ -116,15 +115,14 @@ public class MatchScraper {
 	            Thread.sleep(2000); // Sayfa verilerini güncellemesi için bekle
 
 	            System.out.println("⏪ Dün sekmesine geçildi.");
-	        //} else {
-	          //  System.out.println("📅 Bugün sekmesi aktif, değişiklik yapılmadı.");
-	        //}
+	        } else {
+	            System.out.println("📅 Bugün sekmesi aktif, değişiklik yapılmadı.");
+	        }
 
 	    } catch (Exception e) {
 	        System.out.println("⚠️ Dün sekmesi seçilemedi: " + e.getMessage());
 	    }
 	}
-
 	
 	public void close() {
 		try {

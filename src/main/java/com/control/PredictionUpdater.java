@@ -15,13 +15,13 @@ public class PredictionUpdater {
 	 * GitHub Pages üzerindeki JSON'u indirir, skorları günceller, güncel
 	 * versiyonunu "data/2025-10-16-updated.json" olarak kaydeder.
 	 */
-	public static void updateFromGithub(Map<String, String> updatedScores) throws IOException {
+	public static void updateFromGithub(Map<String, String> updatedScores, String prefix) throws IOException {
 		// 🔹 dünün tarihini bul
 		String yesterday =
 		LocalDate.now(ZoneId.of("Europe/Istanbul")).minusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
 
 		// 🔹 GitHub Pages URL'si
-		String url = "https://sukrutureli.github.io/bettingsukru/data/" + yesterday + ".json";
+		String url = "https://sukrutureli.github.io/bettingsukru/data/" + prefix + yesterday + ".json";
 		System.out.println("📥 JSON indiriliyor: " + url);
 
 		// 🔹 JSON’u indir
@@ -40,7 +40,12 @@ public class PredictionUpdater {
 			if (updatedScores.containsKey(key)) {
 				String score = updatedScores.get(key);
 				p.setScore(score);
-				evaluatePredictions(p, score);
+				if (prefix.equals("")) {
+					evaluatePredictions(p, score, "Futbol");
+				} else if (prefix.equals("basketbol-")) {
+					evaluatePredictions(p, score, "Basketbol");
+				}
+				
 			}
 		}
 
@@ -49,7 +54,7 @@ public class PredictionUpdater {
 		if (!outDir.exists())
 			outDir.mkdirs();
 
-		File outFile = new File(outDir, yesterday + ".json");
+		File outFile = new File(outDir, prefix + yesterday + ".json");
 		mapper.writerWithDefaultPrettyPrinter().writeValue(outFile, predictions);
 
 		System.out.println("✅ Güncellenmiş dosya: " + outFile.getAbsolutePath());
@@ -58,14 +63,19 @@ public class PredictionUpdater {
 	/**
 	 * Skora göre "won/lost/pending" durumu belirler
 	 */
-	private static void evaluatePredictions(PredictionData p, String score) {
+	private static void evaluatePredictions(PredictionData p, String score, String type) {
 		try {
 			String[] parts = score.split("-");
 			int home = Integer.parseInt(parts[0].trim());
 			int away = Integer.parseInt(parts[1].trim());
 
 			for (String pick : p.getPicks()) {
-				String result = evaluatePick(pick, home, away);
+				String result = "";
+				if (type.equals("Futbol")) {
+					result = evaluatePick(pick, home, away);
+				} else if (type.equals("Basketbol")) {
+					result = evaluatePickBasketbol(pick, home, away);
+				}
 				p.getStatuses().put(pick, result);
 			}
 
@@ -91,6 +101,26 @@ public class PredictionUpdater {
 			return (home > 0 && away > 0) ? "won" : "lost";
 		if (pick.toLowerCase().contains("yok"))
 			return (home == 0 || away == 0) ? "won" : "lost";
+
+		return "pending";
+	}
+
+	private static String evaluatePickBasketbol(String pick, int home, int away) {
+		String[] splitPick = pick.split(" ");
+		Double barem = null;
+		if (splitPick.length == 3) {
+			barem = Double.valueOf(splitPick[0].replace(",", "."));
+		}
+		
+		if (pick.contains("MS1"))
+			return home > away ? "won" : "lost";
+		if (pick.contains("MS2"))
+			return away > home ? "won" : "lost";
+
+		if (pick.toLowerCase().contains("üst"))
+			return (home + away) > barem ? "won" : "lost";
+		if (pick.toLowerCase().contains("alt"))
+			return (home + away) < barem ? "won" : "lost";
 
 		return "pending";
 	}
