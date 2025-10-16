@@ -143,19 +143,17 @@ public class MatchScraper {
 	        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 	        JavascriptExecutor js = (JavascriptExecutor) driver;
 
-	        // Menü yüklenene kadar bekle
 	        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".live-result-menu")));
 	        Thread.sleep(1000);
 
-	        // "Bugün" sekmesini bul
 	        WebElement todayTab = driver.findElement(By.xpath("//span[contains(.,'Bugün')]"));
 
-	        // İstanbul saatine göre kontrol
 	        LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
 	        if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
 
-	            // "Bugün" sekmesinden önce gelen sekmeleri bul
-	            List<WebElement> allTabs = driver.findElements(By.xpath("//span[contains(@class,'menu-item') and contains(@class,'tab')]"));
+	            List<WebElement> allTabs = driver.findElements(
+	                By.xpath("//span[contains(@class,'menu-item') and contains(@class,'tab')]")
+	            );
 	            WebElement yesterdayTab = null;
 
 	            for (int i = 0; i < allTabs.size(); i++) {
@@ -166,21 +164,22 @@ public class MatchScraper {
 	            }
 
 	            if (yesterdayTab != null) {
-	                // "disabled" class'ı varsa kaldır
+	                // "disabled" durumunu kaldır ve görünür yap
 	                js.executeScript("arguments[0].classList.remove('disabled');", yesterdayTab);
-
-	                // Overlay veya sabit menü varsa görünene kadar kaydır
 	                js.executeScript("arguments[0].scrollIntoView({block:'center'});", yesterdayTab);
 	                Thread.sleep(1000);
 
-	                // Tıklama işlemini doğrudan JS ile yap
+	                // JS ile zorla tıkla
 	                js.executeScript("arguments[0].click();", yesterdayTab);
-
-	                // Menü değişimini bekle
-	                wait.until(ExpectedConditions.invisibilityOfElementLocated(By.cssSelector("div[style*='height:30px']")));
 	                Thread.sleep(2000);
 
-	                System.out.println("⏪ Dün sekmesine başarıyla geçildi (JS ile tıklama).");
+	                // Overlay beklemeyi kaldır — sadece bilgi mesajı bırak
+	                List<WebElement> overlay = driver.findElements(By.cssSelector("div[style*='height:30px']"));
+	                if (!overlay.isEmpty()) {
+	                    System.out.println("ℹ️ Overlay var ama görmezden geliniyor (basket sayfasında kalıcı).");
+	                }
+
+	                System.out.println("⏪ Dün sekmesine başarıyla geçildi (JS click ile).");
 	            } else {
 	                System.out.println("⚠️ Dün sekmesi bulunamadı (muhtemelen tek sekme aktif).");
 	            }
@@ -193,7 +192,6 @@ public class MatchScraper {
 	        System.out.println("⚠️ Dün sekmesi seçilemedi (force click denemesi): " + e.getMessage());
 	    }
 	}
-
 	
 	public void close() {
 		try {
