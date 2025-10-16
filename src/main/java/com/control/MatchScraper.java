@@ -201,12 +201,24 @@ public class MatchScraper {
 	}
 
 	private String safeText(WebElement el) {
-		try {
-			return el.getText().trim();
-		} catch (Exception e) {
-			return "-";
-		}
+	    try {
+	        String text = el.getAttribute("textContent");
+	        if (text == null || text.trim().isEmpty()) {
+	            text = el.getText(); // fallback
+	        }
+	        return text == null ? "-" : text.trim();
+	    } catch (Exception e) {
+	        try {
+	            // JS ile son çare
+	            return ((JavascriptExecutor) driver)
+	                .executeScript("return arguments[0].innerText || arguments[0].textContent;", el)
+	                .toString().trim();
+	        } catch (Exception inner) {
+	            return "-";
+	        }
+	    }
 	}
+
 	
 	public void waitForPageLoad(WebDriver driver, int timeoutSeconds) {
 	    new WebDriverWait(driver, Duration.ofSeconds(timeoutSeconds)).until(
