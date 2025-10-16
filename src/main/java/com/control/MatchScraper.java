@@ -40,6 +40,8 @@ public class MatchScraper {
 		try {
 			String url = "https://www.nesine.com/iddaa/canli-skor/futbol";
 			driver.get(url);
+			waitForPageLoad(driver, 10);
+			Thread.sleep(1000); // ekstra nefes payı
 			clickYesterdayTabIfNeeded(driver);
 			wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector("li.match-not-play")));
 
@@ -91,6 +93,8 @@ public class MatchScraper {
 	    try {
 	        String url = "https://www.nesine.com/iddaa/canli-skor/basketbol";
 	        driver.get(url);
+	        waitForPageLoad(driver, 10);
+	        Thread.sleep(1000); // ekstra nefes payı
 	        clickYesterdayTabIfNeeded(driver);
 
 	        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
@@ -205,4 +209,15 @@ public class MatchScraper {
 			return "-";
 		}
 	}
+	
+	public void waitForPageLoad(WebDriver driver, int timeoutSeconds) {
+	    new WebDriverWait(driver, Duration.ofSeconds(timeoutSeconds)).until(
+	        webDriver -> ((JavascriptExecutor) webDriver)
+	            .executeScript("return document.readyState").equals("complete"));
+	}
+	
+	public WebDriver getDriver() {
+		return driver;
+	}
+
 }

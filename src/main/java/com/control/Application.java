@@ -20,6 +20,9 @@ public class Application {
 			PredictionUpdater.updateFromGithub(updatedScores, "");
 			
 			//Basketbol
+			scraper.getDriver().manage().deleteAllCookies();
+			scraper.getDriver().navigate().to("about:blank");
+			Thread.sleep(500);
 			
 			Map<String, String> updatedScoresBasketbol = scraper.fetchFinishedScoresBasket();
 			
