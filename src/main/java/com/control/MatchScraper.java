@@ -15,7 +15,7 @@ import java.util.Map;
 public class MatchScraper {
 
 	private WebDriver driver;
-	private JavascriptExecutor js;
+	private WebDriver driver2;
 	private WebDriverWait wait;
 
 	public MatchScraper() {
@@ -28,7 +28,7 @@ public class MatchScraper {
 		options.addArguments("--headless=new", "--no-sandbox", "--disable-dev-shm-usage", "--disable-gpu",
 				"--window-size=1920,1080", "--disable-blink-features=AutomationControlled");
 		driver = new ChromeDriver(options);
-		js = (JavascriptExecutor) driver;
+		driver2 = new ChromeDriver(options);
 		wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 	}
 
@@ -92,18 +92,18 @@ public class MatchScraper {
 	    Map<String, String> scores = new HashMap<>();
 	    try {
 	        String url = "https://www.nesine.com/iddaa/canli-skor/basketbol";
-	        driver.get(url);
-	        waitForPageLoad(driver, 10);
+	        driver2.get(url);
+	        waitForPageLoad(driver2, 10);
 	        Thread.sleep(1000); // ekstra nefes payı
-	        clickYesterdayTabIfNeeded(driver);
+	        clickYesterdayTabIfNeeded(driver2);
 
-	        WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+	        WebDriverWait wait = new WebDriverWait(driver2, Duration.ofSeconds(15));
 	        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".match-list.basketbol")));
 
 	        Thread.sleep(2000); // Dinamik içerik yüklenmesi için kısa bekleme
 
 	        // Tüm bitmiş maçları bul
-	        List<WebElement> finishedMatches = driver.findElements(
+	        List<WebElement> finishedMatches = driver2.findElements(
 	                By.cssSelector("li.match-not-play.unliveData .statusLive.status.finished")
 	        );
 
