@@ -17,11 +17,18 @@ public class PredictionUpdater {
 	 */
 	public static void updateFromGithub(Map<String, String> updatedScores, String prefix) throws IOException {
 		// 🔹 dünün tarihini bul
-		String yesterday =
-		LocalDate.now(ZoneId.of("Europe/Istanbul")).minusDays(1).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		String day = "";
+
+		LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
+		if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
+			day = LocalDate.now(ZoneId.of("Europe/Istanbul")).minusDays(1)
+					.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		} else {
+			day = LocalDate.now(ZoneId.of("Europe/Istanbul")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		}
 
 		// 🔹 GitHub Pages URL'si
-		String url = "https://sukrutureli.github.io/bettingsukru/data/" + prefix + yesterday + ".json";
+		String url = "https://sukrutureli.github.io/bettingsukru/data/" + prefix + day + ".json";
 		System.out.println("📥 JSON indiriliyor: " + url);
 
 		// 🔹 JSON’u indir
@@ -45,7 +52,7 @@ public class PredictionUpdater {
 				} else if (prefix.equals("basketbol-")) {
 					evaluatePredictions(p, score, "Basketbol");
 				}
-				
+
 			}
 		}
 
@@ -54,7 +61,7 @@ public class PredictionUpdater {
 		if (!outDir.exists())
 			outDir.mkdirs();
 
-		File outFile = new File(outDir, prefix + yesterday + ".json");
+		File outFile = new File(outDir, prefix + day + ".json");
 		mapper.writerWithDefaultPrettyPrinter().writeValue(outFile, predictions);
 
 		System.out.println("✅ Güncellenmiş dosya: " + outFile.getAbsolutePath());
@@ -111,7 +118,7 @@ public class PredictionUpdater {
 		if (splitPick.length == 3) {
 			barem = Double.valueOf(splitPick[0].replace(",", "."));
 		}
-		
+
 		if (pick.contains("MS1"))
 			return home > away ? "won" : "lost";
 		if (pick.contains("MS2"))
