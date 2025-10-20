@@ -19,13 +19,13 @@ public class PredictionUpdater {
 		// 🔹 dünün tarihini bul
 		String day = "";
 
-		//LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
-		//if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
-			day = LocalDate.now(ZoneId.of("Europe/Istanbul")).minusDays(2)
+		LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
+		if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
+			day = LocalDate.now(ZoneId.of("Europe/Istanbul")).minusDays(1)
 					.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-		//} else {
-			//day = LocalDate.now(ZoneId.of("Europe/Istanbul")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-		//}
+		} else {
+			day = LocalDate.now(ZoneId.of("Europe/Istanbul")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		}
 
 		// 🔹 GitHub Pages URL'si
 		String url = "https://sukrutureli.github.io/bettingsukru/data/" + prefix + day + ".json";
