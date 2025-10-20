@@ -149,7 +149,7 @@ public class MatchScraper {
 	        WebElement todayTab = driver.findElement(By.xpath("//span[contains(.,'Bugün')]"));
 
 	        LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
-	        if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
+	        //if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
 
 	            List<WebElement> allTabs = driver.findElements(
 	                By.xpath("//span[contains(@class,'menu-item') and contains(@class,'tab')]")
@@ -158,7 +158,7 @@ public class MatchScraper {
 
 	            for (int i = 0; i < allTabs.size(); i++) {
 	                if (allTabs.get(i).getText().contains("Bugün") && i > 0) {
-	                    yesterdayTab = allTabs.get(i - 1);
+	                    yesterdayTab = allTabs.get(i - 2);
 	                    break;
 	                }
 	            }
@@ -184,9 +184,9 @@ public class MatchScraper {
 	                System.out.println("⚠️ Dün sekmesi bulunamadı (muhtemelen tek sekme aktif).");
 	            }
 
-	        } else {
-	            System.out.println("📅 Şu an bugün sekmesi kullanılabilir, geçiş yapılmadı.");
-	        }
+	       // } else {
+	         //   System.out.println("📅 Şu an bugün sekmesi kullanılabilir, geçiş yapılmadı.");
+	        //}
 
 	    } catch (Exception e) {
 	        System.out.println("⚠️ Dün sekmesi seçilemedi (force click denemesi): " + e.getMessage());
