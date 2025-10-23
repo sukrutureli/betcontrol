@@ -146,8 +146,6 @@ public class MatchScraper {
 	        wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".live-result-menu")));
 	        Thread.sleep(1000);
 
-	        WebElement todayTab = driver.findElement(By.xpath("//span[contains(.,'Bugün')]"));
-
 	        LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
 	        if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
 
