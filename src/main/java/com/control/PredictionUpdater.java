@@ -115,7 +115,7 @@ public class PredictionUpdater {
 	private static String evaluatePickBasketbol(String pick, int home, int away) {
 		String[] splitPick = pick.split(" ");
 		Double barem = null;
-		if (pick.contains(".")) {
+		if (Character.isDigit(pick.charAt(0))) {
 			barem = Double.valueOf(splitPick[0].replace(",", "."));
 		}
 
