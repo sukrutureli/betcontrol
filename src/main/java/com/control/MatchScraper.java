@@ -46,37 +46,46 @@ public class MatchScraper {
 		try {
 			String url = "https://www.nesine.com/iddaa/canli-skor/futbol";
 			driver.get(url);
-			waitForPageLoad(driver, 10);
-			Thread.sleep(1000);
-			clickYesterdayTabIfNeeded(driver);
-			Thread.sleep(1500);
 
-			// 🔹 Bitmiş maçlar (tüm tipleriyle)
+			waitForPageLoad(driver, 15);
+			Thread.sleep(1500);
+			clickYesterdayTabIfNeeded(driver);
+
+			// Lazy load için sayfanın sonuna kadar kaydır
+			JavascriptExecutor js = (JavascriptExecutor) driver;
+			for (int i = 0; i < 4; i++) {
+				js.executeScript("window.scrollTo(0, document.body.scrollHeight);");
+				Thread.sleep(1200);
+			}
+
+			// Nesine’de bitmiş maçlar için değişken class isimlerini kapsa
 			wait.until(ExpectedConditions
 					.presenceOfAllElementsLocatedBy(By.cssSelector("li[class*='match'] .teams-score-content")));
 
+			// 🔹 Tüm match tiplerini yakala
 			List<WebElement> matches = driver.findElements(By.cssSelector("li[class*='match']"));
-			System.out.println("Toplam maç (tüm türler): " + matches.size());
+			System.out.println("Toplam maç bulundu: " + matches.size());
 
 			for (WebElement match : matches) {
 				try {
-					// "finished" olmayanları atla
 					String cls = match.getAttribute("class");
-					if (cls == null || !cls.contains("finished"))
+					if (cls == null)
 						continue;
 
-					// Skor board'u bul (normal süre)
+					// Sadece bitmiş maçları tut
+					if (!(cls.contains("finished") || cls.contains("unlive") || cls.contains("not-play")))
+						continue;
+
+					// Normal skor board'unu al (penaltı board'larını atla)
 					List<WebElement> boards = match.findElements(By.cssSelector(".teams-score-content .board"));
 					if (boards.isEmpty())
 						continue;
 
 					WebElement board = boards.get(0);
-
 					String home = safeText(match.findElement(By.cssSelector(".home-team span[aria-hidden='true']")),
 							driver);
 					String away = safeText(match.findElement(By.cssSelector(".away-team span[aria-hidden='true']")),
 							driver);
-
 					String homeScore = safeText(board.findElement(By.cssSelector(".home-score")), driver);
 					String awayScore = safeText(board.findElement(By.cssSelector(".away-score")), driver);
 
