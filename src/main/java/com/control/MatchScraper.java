@@ -51,11 +51,11 @@ public class MatchScraper {
 			clickYesterdayTabIfNeeded(driver);
 			Thread.sleep(1500);
 
-			wait.until(ExpectedConditions
-					.presenceOfAllElementsLocatedBy(By.cssSelector("li.match-not-play .teams-score-content")));
+			wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(
+					By.cssSelector("li[class*='match-not-play'] .teams-score-content")));
 
-			List<WebElement> matches = driver.findElements(By.cssSelector("li.match-not-play"));
-			System.out.println("Toplam maç: " + matches.size());
+			List<WebElement> matches = driver.findElements(By.cssSelector("li[class*='match-not-play']"));
+			System.out.println("Toplam maç : " + matches.size());
 
 			for (WebElement match : matches) {
 				try {
