@@ -51,33 +51,42 @@ public class MatchScraper {
 			clickYesterdayTabIfNeeded(driver);
 			Thread.sleep(1500);
 
-			wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(
-					By.cssSelector("li[class*='match-not-play'] .teams-score-content")));
+			// 🔹 Bitmiş maçlar (tüm tipleriyle)
+			wait.until(ExpectedConditions
+					.presenceOfAllElementsLocatedBy(By.cssSelector("li[class*='match'] .teams-score-content")));
 
-			List<WebElement> matches = driver.findElements(By.cssSelector("li[class*='match-not-play']"));
-			System.out.println("Toplam maç : " + matches.size());
+			List<WebElement> matches = driver.findElements(By.cssSelector("li[class*='match']"));
+			System.out.println("Toplam maç (tüm türler): " + matches.size());
 
 			for (WebElement match : matches) {
 				try {
-					// Bitmiş maç: board var mı?
-					if (match.findElements(By.cssSelector(".board .home-score")).isEmpty())
+					// "finished" olmayanları atla
+					String cls = match.getAttribute("class");
+					if (cls == null || !cls.contains("finished"))
 						continue;
+
+					// Skor board'u bul (normal süre)
+					List<WebElement> boards = match.findElements(By.cssSelector(".teams-score-content .board"));
+					if (boards.isEmpty())
+						continue;
+
+					WebElement board = boards.get(0);
 
 					String home = safeText(match.findElement(By.cssSelector(".home-team span[aria-hidden='true']")),
 							driver);
 					String away = safeText(match.findElement(By.cssSelector(".away-team span[aria-hidden='true']")),
 							driver);
 
-					WebElement board = match.findElement(By.cssSelector(".board"));
 					String homeScore = safeText(board.findElement(By.cssSelector(".home-score")), driver);
 					String awayScore = safeText(board.findElement(By.cssSelector(".away-score")), driver);
+
 					String score = homeScore + "-" + awayScore;
 
 					scores.put(home + " - " + away, score);
 					System.out.println("✅ " + home + " - " + away + " → " + score);
 
 				} catch (Exception e) {
-					System.out.println("⚠️ Futbol maçında hata: " + e.getMessage());
+					System.out.println("⚠️ Tekil maç hatası: " + e.getMessage());
 				}
 			}
 
