@@ -106,51 +106,63 @@ public class MatchScraper {
 	// 🏀 BASKETBOL: Bitmiş maç skorlarını çek
 	// =============================================================
 	public Map<String, String> fetchFinishedScoresBasket() {
-		Map<String, String> scores = new HashMap<>();
-		try {
-			String url = "https://www.nesine.com/iddaa/canli-skor/basketbol";
-			driver2.get(url);
-			waitForPageLoad(driver2, 10);
-			Thread.sleep(1000);
-			clickYesterdayTabIfNeeded(driver2);
-			Thread.sleep(1500);
+	    Map<String, String> scores = new HashMap<>();
+	    try {
+	        String url = "https://www.nesine.com/iddaa/canli-skor/basketbol";
+	        driver2.get(url);
+	        waitForPageLoad(driver2, 10);
+	        Thread.sleep(1000);
+	        clickYesterdayTabIfNeeded(driver2);
+	        Thread.sleep(1500);
 
-			wait.until(ExpectedConditions
-					.presenceOfAllElementsLocatedBy(By.cssSelector("li.match-not-play .teams-score-content")));
+	        // Lazy load ihtimali için sayfayı biraz aşağı kaydır
+	        JavascriptExecutor js = (JavascriptExecutor) driver2;
+	        js.executeScript("window.scrollTo(0, document.body.scrollHeight / 2);");
+	        Thread.sleep(1000);
 
-			List<WebElement> matches = driver2.findElements(By.cssSelector("li.match-not-play"));
-			System.out.println("Toplam maç (basketbol): " + matches.size());
+	        // Bitmiş maçların DOM yapısını bekle
+	        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(
+	                By.cssSelector("li[class*='match-not-play'] .teams-score-content")));
 
-			for (WebElement match : matches) {
-				try {
-					if (match.findElements(By.cssSelector(".board .home-score")).isEmpty())
-						continue;
+	        List<WebElement> matches = driver2.findElements(By.cssSelector("li[class*='match-not-play']"));
+	        System.out.println("Toplam maç (basketbol): " + matches.size());
 
-					String home = safeText(match.findElement(By.cssSelector(".home-team span[aria-hidden='true']")),
-							driver2);
-					String away = safeText(match.findElement(By.cssSelector(".away-team span[aria-hidden='true']")),
-							driver2);
+	        for (WebElement match : matches) {
+	            try {
+	                // Bitmiş maç değilse atla (güvenlik amaçlı)
+	                String cls = match.getAttribute("class");
+	                if (cls == null || !(cls.contains("unlive") || cls.contains("not-play")))
+	                    continue;
 
-					WebElement board = match.findElement(By.cssSelector(".board"));
-					String homeScore = safeText(board.findElement(By.cssSelector(".home-score")), driver2);
-					String awayScore = safeText(board.findElement(By.cssSelector(".away-score")), driver2);
-					String score = homeScore + "-" + awayScore;
+	                // Skor board'u varsa devam et
+	                if (match.findElements(By.cssSelector(".board .home-score")).isEmpty())
+	                    continue;
 
-					scores.put(home + " - " + away, score);
-					System.out.println("🏀 " + home + " - " + away + " → " + score);
+	                String home = safeText(match.findElement(By.cssSelector(".home-team span[aria-hidden='true']")), driver2);
+	                String away = safeText(match.findElement(By.cssSelector(".away-team span[aria-hidden='true']")), driver2);
 
-				} catch (Exception e) {
-					System.out.println("⚠️ Basketbol maçında hata: " + e.getMessage());
-				}
-			}
+	                WebElement board = match.findElement(By.cssSelector(".board"));
+	                String homeScore = safeText(board.findElement(By.cssSelector(".home-score")), driver2);
+	                String awayScore = safeText(board.findElement(By.cssSelector(".away-score")), driver2);
 
-			System.out.println("🏀 Bitmiş basket maç sayısı: " + scores.size());
+	                String score = homeScore + "-" + awayScore;
+	                scores.put(home + " - " + away, score);
 
-		} catch (Exception e) {
-			System.out.println("fetchFinishedScoresBasket hata: " + e.getMessage());
-		}
-		return scores;
+	                System.out.println("🏀 " + home + " - " + away + " → " + score);
+
+	            } catch (Exception e) {
+	                System.out.println("⚠️ Basketbol maçında hata: " + e.getMessage());
+	            }
+	        }
+
+	        System.out.println("🏀 Bitmiş basket maç sayısı: " + scores.size());
+
+	    } catch (Exception e) {
+	        System.out.println("fetchFinishedScoresBasket hata: " + e.getMessage());
+	    }
+	    return scores;
 	}
+
 
 	// =============================================================
 	// ⏪ Gece 00:00–06:00 arası "Dün" sekmesine geç
