@@ -51,19 +51,18 @@ public class MatchScraper {
 			Thread.sleep(1500);
 			clickYesterdayTabIfNeeded(driver);
 
-			// Lazy load için sayfanın sonuna kadar kaydır
+			// lazy load: scroll aşağıya
 			JavascriptExecutor js = (JavascriptExecutor) driver;
 			for (int i = 0; i < 4; i++) {
 				js.executeScript("window.scrollTo(0, document.body.scrollHeight);");
 				Thread.sleep(1200);
 			}
 
-			// Nesine’de bitmiş maçlar için değişken class isimlerini kapsa
-			wait.until(ExpectedConditions
-					.presenceOfAllElementsLocatedBy(By.cssSelector("li[class*='match'] .teams-score-content")));
+			// 🔹 hem match hem extra-time class’larını kapsa
+			String selector = "li[class*='match'], li[class*='extra-time']";
+			wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector(selector)));
 
-			// 🔹 Tüm match tiplerini yakala
-			List<WebElement> matches = driver.findElements(By.cssSelector("li[class*='match']"));
+			List<WebElement> matches = driver.findElements(By.cssSelector(selector));
 			System.out.println("Toplam maç bulundu: " + matches.size());
 
 			for (WebElement match : matches) {
@@ -72,23 +71,19 @@ public class MatchScraper {
 					if (cls == null)
 						continue;
 
-					// Sadece bitmiş maçları tut
-					if (!(cls.contains("finished") || cls.contains("unlive") || cls.contains("not-play")))
+					// bitmiş olanlar
+					if (!(cls.contains("finished") || cls.contains("unlive") || cls.contains("not-play")
+							|| cls.contains("extra-time")))
 						continue;
 
-					// Normal skor board'unu al (penaltı board'larını atla)
-					List<WebElement> boards = match.findElements(By.cssSelector(".teams-score-content .board"));
-					if (boards.isEmpty())
-						continue;
-
-					WebElement board = boards.get(0);
+					// sadece normal süre board’u (penaltı board’u değil)
+					WebElement board = match.findElement(By.cssSelector(".teams-score-content .board"));
 					String home = safeText(match.findElement(By.cssSelector(".home-team span[aria-hidden='true']")),
 							driver);
 					String away = safeText(match.findElement(By.cssSelector(".away-team span[aria-hidden='true']")),
 							driver);
 					String homeScore = safeText(board.findElement(By.cssSelector(".home-score")), driver);
 					String awayScore = safeText(board.findElement(By.cssSelector(".away-score")), driver);
-
 					String score = homeScore + "-" + awayScore;
 
 					scores.put(home + " - " + away, score);
