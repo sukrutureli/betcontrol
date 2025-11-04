@@ -69,10 +69,10 @@ public class PredictionUpdater {
 					String homeKey = parts[0];
 					String awayKey = parts[1];
 					
-					if (home == homeKey || away == awayKey) {
-						matchedKey = key;
-						count++;
-					}
+					if (home.equals(homeKey) && away.equals(awayKey)) {
+	      matchedKey = key;
+	count++;
+}
 				}
 			}
 
@@ -165,3 +165,4 @@ public class PredictionUpdater {
 		return "pending";
 	}
 }
+
