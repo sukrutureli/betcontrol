@@ -41,18 +41,51 @@ public class PredictionUpdater {
 		}
 
 		// 🔹 Güncelle
+//		for (PredictionData p : predictions) {
+//			String key = (p.getHomeTeam() + " - " + p.getAwayTeam()).trim();
+//			System.out.println(key);
+//			if (updatedScores.containsKey(key)) {
+//				String score = updatedScores.get(key);
+//				p.setScore(score);
+//				if (prefix.equals("")) {
+//					evaluatePredictions(p, score, "Futbol");
+//				} else if (prefix.equals("basketbol-")) {
+//					evaluatePredictions(p, score, "Basketbol");
+//				}
+//
+//			}
+//		}
+
 		for (PredictionData p : predictions) {
-			String key = (p.getHomeTeam() + " - " + p.getAwayTeam()).trim();
-			System.out.println(key);
-			if (updatedScores.containsKey(key)) {
-				String score = updatedScores.get(key);
+			String home = p.getHomeTeam();
+			String away = p.getAwayTeam();
+			String matchedKey = null;
+
+			int count = 0;
+			// 🔹 1️⃣ Önce tam eşleşme kontrolü
+			for (String key : updatedScores.keySet()) {
+				String[] parts = key.split(" - ");
+				if (parts.length == 2) {
+					String homeKey = parts[0];
+					String awayKey = parts[1];
+					
+					if (home == homeKey || away == awayKey) {
+						matchedKey = key;
+						count++;
+					}
+				}
+			}
+
+			if (matchedKey != null && count == 1) {
+				String score = updatedScores.get(matchedKey);
 				p.setScore(score);
 				if (prefix.equals("")) {
 					evaluatePredictions(p, score, "Futbol");
 				} else if (prefix.equals("basketbol-")) {
 					evaluatePredictions(p, score, "Basketbol");
 				}
-
+			} else {
+				System.out.println("⚠️ Eşleşme bulunamadı: " + p.getHomeTeam() + " - " + p.getAwayTeam());
 			}
 		}
 
