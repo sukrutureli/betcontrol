@@ -106,63 +106,84 @@ public class MatchScraper {
 	// 🏀 BASKETBOL: Bitmiş maç skorlarını çek
 	// =============================================================
 	public Map<String, String> fetchFinishedScoresBasket() {
-	    Map<String, String> scores = new HashMap<>();
-	    try {
-	        String url = "https://www.nesine.com/iddaa/canli-skor/basketbol";
-	        driver2.get(url);
-	        waitForPageLoad(driver2, 10);
-	        Thread.sleep(1000);
-	        clickYesterdayTabIfNeeded(driver2);
-	        Thread.sleep(1500);
+		Map<String, String> scores = new HashMap<>();
+		try {
+			String url = "https://www.nesine.com/iddaa/canli-skor/basketbol";
+			driver2.get(url);
+			waitForPageLoad(driver2, 10);
+			Thread.sleep(1000);
+			clickYesterdayTabIfNeeded(driver2);
+			Thread.sleep(1500);
 
-	        // Lazy load ihtimali için sayfayı biraz aşağı kaydır
-	        JavascriptExecutor js = (JavascriptExecutor) driver2;
-	        js.executeScript("window.scrollTo(0, document.body.scrollHeight / 2);");
-	        Thread.sleep(1000);
+			JavascriptExecutor js = (JavascriptExecutor) driver2;
+			for (int i = 0; i < 3; i++) {
+				js.executeScript("window.scrollTo(0, document.body.scrollHeight);");
+				Thread.sleep(1000);
+			}
 
-	        // Bitmiş maçların DOM yapısını bekle
-	        wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(
-	                By.cssSelector("li[class*='match-not-play'] .teams-score-content")));
+			// 🔹 Artık sadece match-not-play değil, extra-time ve unlive'ları da dahil et
+			String selector = "li[class*='match'], li[class*='extra-time'], li[class*='unlive'], li[class*='not-play']";
+			wait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.cssSelector(selector)));
 
-	        List<WebElement> matches = driver2.findElements(By.cssSelector("li[class*='match-not-play']"));
-	        System.out.println("Toplam maç (basketbol): " + matches.size());
+			List<WebElement> matches = driver2.findElements(By.cssSelector(selector));
+			System.out.println("Toplam maç (basketbol): " + matches.size());
 
-	        for (WebElement match : matches) {
-	            try {
-	                // Bitmiş maç değilse atla (güvenlik amaçlı)
-	                String cls = match.getAttribute("class");
-	                if (cls == null || !(cls.contains("unlive") || cls.contains("not-play")))
-	                    continue;
+			for (WebElement match : matches) {
+				try {
+					String cls = match.getAttribute("class");
+					if (cls == null)
+						continue;
 
-	                // Skor board'u varsa devam et
-	                if (match.findElements(By.cssSelector(".board .home-score")).isEmpty())
-	                    continue;
+					// Sadece bitmiş olanlar
+					if (!(cls.contains("unlive") || cls.contains("not-play") || cls.contains("extra-time")
+							|| cls.contains("finished")))
+						continue;
 
-	                String home = safeText(match.findElement(By.cssSelector(".home-team span[aria-hidden='true']")), driver2);
-	                String away = safeText(match.findElement(By.cssSelector(".away-team span[aria-hidden='true']")), driver2);
+					// Takım adlarını al
+					String home = safeText(match.findElement(By.cssSelector(".home-team span[aria-hidden='true']")),
+							driver2);
+					String away = safeText(match.findElement(By.cssSelector(".away-team span[aria-hidden='true']")),
+							driver2);
 
-	                WebElement board = match.findElement(By.cssSelector(".board"));
-	                String homeScore = safeText(board.findElement(By.cssSelector(".home-score")), driver2);
-	                String awayScore = safeText(board.findElement(By.cssSelector(".away-score")), driver2);
+					// Skor board'unu bul
+					WebElement board = match.findElement(By.cssSelector(".teams-score-content .board"));
+					String homeScore = safeText(board.findElement(By.cssSelector(".home-score")), driver2);
+					String awayScore = safeText(board.findElement(By.cssSelector(".away-score")), driver2);
+					String score = homeScore + "-" + awayScore;
 
-	                String score = homeScore + "-" + awayScore;
-	                scores.put(home + " - " + away, score);
+					// 🔹 Uzatma kontrolü: "period-info" veya "quarter" kısmında “Uzatma” geçiyor
+					// mu?
+					boolean isOvertime = false;
+					List<WebElement> periodInfos = match
+							.findElements(By.cssSelector(".period-info, .quarter-info, .period-name"));
+					for (WebElement p : periodInfos) {
+						String txt = p.getText().toLowerCase(Locale.ROOT);
+						if (txt.contains("uzatma") || txt.contains("ot")) {
+							isOvertime = true;
+							break;
+						}
+					}
 
-	                System.out.println("🏀 " + home + " - " + away + " → " + score);
+					if (isOvertime) {
+						System.out.println("🏀 (Uzatma) " + home + " - " + away + " → " + score);
+					} else {
+						System.out.println("🏀 " + home + " - " + away + " → " + score);
+					}
 
-	            } catch (Exception e) {
-	                System.out.println("⚠️ Basketbol maçında hata: " + e.getMessage());
-	            }
-	        }
+					scores.put(home + " - " + away, score);
 
-	        System.out.println("🏀 Bitmiş basket maç sayısı: " + scores.size());
+				} catch (Exception e) {
+					System.out.println("⚠️ Basketbol maçında hata: " + e.getMessage());
+				}
+			}
 
-	    } catch (Exception e) {
-	        System.out.println("fetchFinishedScoresBasket hata: " + e.getMessage());
-	    }
-	    return scores;
+			System.out.println("🏀 Bitmiş basket maç sayısı: " + scores.size());
+
+		} catch (Exception e) {
+			System.out.println("fetchFinishedScoresBasket hata: " + e.getMessage());
+		}
+		return scores;
 	}
-
 
 	// =============================================================
 	// ⏪ Gece 00:00–06:00 arası "Dün" sekmesine geç
@@ -176,7 +197,7 @@ public class MatchScraper {
 			Thread.sleep(1000);
 
 			LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
-			if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
+			//if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
 
 				List<WebElement> tabs = driver
 						.findElements(By.xpath("//span[contains(@class,'menu-item') and contains(@class,'tab')]"));
@@ -200,9 +221,9 @@ public class MatchScraper {
 					System.out.println("⚠️ Dün sekmesi bulunamadı.");
 				}
 
-			} else {
-				System.out.println("📅 Şu an bugün sekmesi aktif, geçiş yapılmadı.");
-			}
+			//} else {
+				//System.out.println("📅 Şu an bugün sekmesi aktif, geçiş yapılmadı.");
+			//}
 
 		} catch (Exception e) {
 			System.out.println("⚠️ Dün sekmesine geçilemedi: " + e.getMessage());
