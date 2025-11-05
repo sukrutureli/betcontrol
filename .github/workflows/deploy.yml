@@ -55,12 +55,14 @@ jobs:
 
       - name: 🔍 Test token access to target repo
         env:
-          ADMIN_USER: ${{ secrets.TOKEN }}
+          TOKEN: ${{ secrets.TOKEN }}
         run: |
           echo "Testing token access..."
-          curl -s -H "Authorization: Bearer $ADMIN_USER" https://api.github.com/repos/sukrutureli/bettingsukru
+          curl -s -H "Authorization: Bearer $TOKEN" https://api.github.com/repos/sukrutureli/bettingsukru
 
       - name: Commit only public folder to pages branch
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
         run: |
           git fetch origin main || true
           git checkout main || git checkout --orphan main
