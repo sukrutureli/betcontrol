@@ -2,6 +2,7 @@ package com.control;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -16,89 +17,87 @@ public class PredictionUpdater {
 	 * versiyonunu "data/2025-10-16-updated.json" olarak kaydeder.
 	 */
 	public static void updateFromGithub(Map<String, String> updatedScores, String prefix) throws IOException {
-		// 🔹 dünün tarihini bul
-		String day = "";
+	    String day;
+	    LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
+	    if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
+	        day = LocalDate.now(ZoneId.of("Europe/Istanbul")).minusDays(1)
+	                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+	    } else {
+	        day = LocalDate.now(ZoneId.of("Europe/Istanbul")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+	    }
 
-		LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
-		if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
-			day = LocalDate.now(ZoneId.of("Europe/Istanbul")).minusDays(1)
-					.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-		} else {
-			day = LocalDate.now(ZoneId.of("Europe/Istanbul")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-		}
+	    // 🔹 Private repo'dan dosya URL'si (raw)
+	    String url = "https://raw.githubusercontent.com/sukrutureli/bettingsukru/main/data/" + prefix + day + ".json";
+	    System.out.println("📥 JSON indiriliyor: " + url);
 
-		// 🔹 GitHub Pages URL'si
-		String url = "https://sukrutureli.github.io/bettingsukru/data/" + prefix + day + ".json";
-		System.out.println("📥 JSON indiriliyor: " + url);
+	    // 🔹 GitHub Personal Access Token (örneğin env değişkeninden)
+	    String token = System.getenv("GITHUB_TOKEN"); // veya sabit test için: "ghp_XXXXXXXXXXXX"
 
-		// 🔹 JSON’u indir
-		List<PredictionData> predictions;
-		try (InputStream in = new URL(url).openStream()) {
-			predictions = mapper.readerForListOf(PredictionData.class).readValue(in);
-		} catch (Exception e) {
-			System.out.println("�?� JSON indirilemedi: " + e.getMessage());
-			return;
-		}
+	    if (token == null || token.isEmpty()) {
+	        throw new RuntimeException("❌ GITHUB_TOKEN environment variable not set!");
+	    }
 
-		// 🔹 Güncelle
-//		for (PredictionData p : predictions) {
-//			String key = (p.getHomeTeam() + " - " + p.getAwayTeam()).trim();
-//			System.out.println(key);
-//			if (updatedScores.containsKey(key)) {
-//				String score = updatedScores.get(key);
-//				p.setScore(score);
-//				if (prefix.equals("")) {
-//					evaluatePredictions(p, score, "Futbol");
-//				} else if (prefix.equals("basketbol-")) {
-//					evaluatePredictions(p, score, "Basketbol");
-//				}
-//
-//			}
-//		}
+	    // 🔹 Token ile HTTP isteği yap
+	    HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+	    conn.setRequestMethod("GET");
+	    conn.setRequestProperty("Authorization", "token " + token);
+	    conn.setRequestProperty("Accept", "application/vnd.github.v3.raw");
 
-		for (PredictionData p : predictions) {
-			String home = p.getHomeTeam();
-			String away = p.getAwayTeam();
-			String matchedKey = null;
+	    int status = conn.getResponseCode();
+	    if (status != 200) {
+	        throw new IOException("GitHub dosya indirme hatası: HTTP " + status);
+	    }
 
-			int count = 0;
-			// 🔹 1️⃣ Önce tam eşleşme kontrolü
-			for (String key : updatedScores.keySet()) {
-				String[] parts = key.split(" - ");
-				if (parts.length == 2) {
-					String homeKey = parts[0];
-					String awayKey = parts[1];
-					
-					if (home.equals(homeKey) && away.equals(awayKey)) {
-	      matchedKey = key;
-	count++;
-}
-				}
-			}
+	    // 🔹 JSON parse et
+	    List<PredictionData> predictions;
+	    try (InputStream in = conn.getInputStream()) {
+	        predictions = mapper.readerForListOf(PredictionData.class).readValue(in);
+	    }
 
-			if (matchedKey != null && count == 1) {
-				String score = updatedScores.get(matchedKey);
-				p.setScore(score);
-				if (prefix.equals("")) {
-					evaluatePredictions(p, score, "Futbol");
-				} else if (prefix.equals("basketbol-")) {
-					evaluatePredictions(p, score, "Basketbol");
-				}
-			} else {
-				System.out.println("⚠️ Eşleşme bulunamadı: " + p.getHomeTeam() + " - " + p.getAwayTeam());
-			}
-		}
+	    // 🔹 Güncelleme işlemleri...
+	    for (PredictionData p : predictions) {
+	        String home = p.getHomeTeam();
+	        String away = p.getAwayTeam();
+	        String matchedKey = null;
+	        int count = 0;
 
-		// 🔹 Lokale kaydet (örnek: data/2025-10-15-updated.json)
-		File outDir = new File("public/data");
-		if (!outDir.exists())
-			outDir.mkdirs();
+	        for (String key : updatedScores.keySet()) {
+	            String[] parts = key.split(" - ");
+	            if (parts.length == 2) {
+	                String homeKey = parts[0];
+	                String awayKey = parts[1];
 
-		File outFile = new File(outDir, prefix + day + ".json");
-		mapper.writerWithDefaultPrettyPrinter().writeValue(outFile, predictions);
+	                if (home.equals(homeKey) && away.equals(awayKey)) {
+	                    matchedKey = key;
+	                    count = 1;
+	                    break;
+	                }
 
-		System.out.println("✅ Güncellenmiş dosya: " + outFile.getAbsolutePath());
+	                if (home.equals(homeKey) || away.equals(awayKey)) {
+	                    matchedKey = key;
+	                    count++;
+	                }
+	            }
+	        }
+
+	        if (matchedKey != null && count == 1) {
+	            String score = updatedScores.get(matchedKey);
+	            p.setScore(score);
+	            evaluatePredictions(p, score, prefix.isEmpty() ? "Futbol" : "Basketbol");
+	        } else {
+	            System.out.println("⚠️ Eşleşme bulunamadı: " + p.getHomeTeam() + " - " + p.getAwayTeam());
+	        }
+	    }
+
+	    // 🔹 Kaydet
+	    File outDir = new File("public/data");
+	    if (!outDir.exists()) outDir.mkdirs();
+	    File outFile = new File(outDir, prefix + day + ".json");
+	    mapper.writerWithDefaultPrettyPrinter().writeValue(outFile, predictions);
+
+	    System.out.println("✅ Güncellenmiş dosya: " + outFile.getAbsolutePath());
 	}
+
 
 	/**
 	 * Skora göre "won/lost/pending" durumu belirler
@@ -165,4 +164,3 @@ public class PredictionUpdater {
 		return "pending";
 	}
 }
-
