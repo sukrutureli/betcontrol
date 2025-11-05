@@ -71,7 +71,7 @@ jobs:
           git config user.name "Şükrü Türeli"
           git config user.email "sukrutureli@gmail.com"
           git commit -m "📦 Update public HTML $(date +'%Y-%m-%d %H:%M')" || echo "No changed"
-          echo "x-access-token:${TOKEN}" > /tmp/token.txt
+          echo "x-access-token:$TOKEN" > /tmp/token.txt
           git config credential.helper "store --file=/tmp/token.txt"
           git push https://github.com/sukrutureli/bettingsukru.git main
 
