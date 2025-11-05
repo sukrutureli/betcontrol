@@ -27,7 +27,7 @@ public class PredictionUpdater {
 		}
 
 		// 🔹 Private repo'dan dosya URL'si (raw)
-		String url = "https://raw.githubusercontent.com/sukrutureli/bettingsukru/main/data/" + prefix + day + ".json";
+		String url = "https://raw.githubusercontent.com/sukrutureli/bettingsukru/pages/data/" + prefix + day + ".json";
 		System.out.println("📥 JSON indiriliyor: " + url);
 
 		// 🔹 GitHub Personal Access Token (örneğin env değişkeninden)
