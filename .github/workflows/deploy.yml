@@ -53,6 +53,13 @@ jobs:
           name: public-html
           path: ./public
 
+      - name: 🔍 Test token access to target repo
+        env:
+          ADMIN_USER: ${{ secrets.TOKEN }}
+        run: |
+          echo "Testing token access..."
+          curl -s -H "Authorization: Bearer $ADMIN_USER" https://api.github.com/repos/sukrutureli/bettingsukru
+
       - name: Commit only public folder to pages branch
         run: |
           git fetch origin main || true
