@@ -29,6 +29,8 @@ jobs:
           apt-get install -y maven
 
       - name: Build and Run Scraper
+        env:
+          GITHUB_TOKEN: ${{ secrets.ADMIN_USER }}  # 🔹 işte burası
         run: mvn clean compile exec:java
 
       - name: Upload public directory as artifact
