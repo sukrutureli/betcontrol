@@ -106,72 +106,76 @@ public class MatchScraper {
 	// 🏀 BASKETBOL: Bitmiş maç skorlarını çek
 	// =============================================================
 	public Map<String, String> fetchFinishedScoresBasket() {
-	    Map<String, String> scores = new HashMap<>();
-	    try {
-	        String url = "https://www.nesine.com/iddaa/canli-skor/basketbol";
-	        driver2.get(url);
-	        waitForPageLoad(driver2, 15);
-	        Thread.sleep(2000);
-	        clickYesterdayTabIfNeeded(driver2);
-	        Thread.sleep(1500);
+		Map<String, String> scores = new HashMap<>();
+		try {
+			String url = "https://www.nesine.com/iddaa/canli-skor/basketbol";
+			driver2.get(url);
+			waitForPageLoad(driver2, 15);
+			Thread.sleep(2000);
+			clickYesterdayTabIfNeeded(driver2);
+			Thread.sleep(1500);
 
-	        JavascriptExecutor js = (JavascriptExecutor) driver2;
-	        for (int i = 0; i < 5; i++) {
-	            js.executeScript("window.scrollTo(0, document.body.scrollHeight);");
-	            Thread.sleep(1000);
-	        }
+			JavascriptExecutor js = (JavascriptExecutor) driver2;
+			for (int i = 0; i < 5; i++) {
+				js.executeScript("window.scrollTo(0, document.body.scrollHeight);");
+				Thread.sleep(1000);
+			}
 
-	        // 🔹 Yeni DOM yapısı: "div.main"
-	        List<WebElement> matches = driver2.findElements(By.cssSelector("div.main"));
-	        System.out.println("Toplam basket maç bulundu: " + matches.size());
+			// 🔹 Yeni DOM yapısı: "div.main"
+			List<WebElement> matches = driver2.findElements(By.cssSelector("div.main"));
+			System.out.println("Toplam basket maç bulundu: " + matches.size());
 
-	        for (WebElement match : matches) {
-	            try {
-	                // sadece bitmiş maçlar
-	                List<WebElement> status = match.findElements(By.cssSelector(".status.finished, .status.not-play, .extra-time-line.finished"));
-	                if (status.isEmpty()) continue;
+			for (WebElement match : matches) {
+				try {
+					// sadece bitmiş maçlar
+					List<WebElement> status = match.findElements(
+							By.cssSelector(".status.finished, .status.not-play, .extra-time-line.finished"));
+					if (status.isEmpty())
+						continue;
 
-	                // Takım isimleri
-	                String home = safeText(match.findElement(By.cssSelector(".home-team span[aria-hidden='true']")), driver2);
-	                String away = safeText(match.findElement(By.cssSelector(".away-team span[aria-hidden='true']")), driver2);
+					// Takım isimleri
+					String home = safeText(match.findElement(By.cssSelector(".home-team span[aria-hidden='true']")),
+							driver2);
+					String away = safeText(match.findElement(By.cssSelector(".away-team span[aria-hidden='true']")),
+							driver2);
 
-	                // Varsayılan skor (normal süre)
-	                WebElement normalBoard = match.findElement(By.cssSelector(".teams-score-content .board"));
-	                String homeScore = safeText(normalBoard.findElement(By.cssSelector(".home-score")), driver2);
-	                String awayScore = safeText(normalBoard.findElement(By.cssSelector(".away-score")), driver2);
-	                String score = homeScore + "-" + awayScore;
-	                boolean isOvertime = false;
+					// Varsayılan skor (normal süre)
+					WebElement normalBoard = match.findElement(By.cssSelector(".teams-score-content .board"));
+					String homeScore = safeText(normalBoard.findElement(By.cssSelector(".home-score")), driver2);
+					String awayScore = safeText(normalBoard.findElement(By.cssSelector(".away-score")), driver2);
+					String score = homeScore + "-" + awayScore;
+					boolean isOvertime = false;
 
-	                // 🔹 Eğer uzatma varsa, uzatma skorunu al
-	                List<WebElement> extraBoards = match.findElements(By.cssSelector(".extra-time-line.finished .board"));
-	                if (!extraBoards.isEmpty()) {
-	                    WebElement extra = extraBoards.get(0);
-	                    String homeExtra = safeText(extra.findElement(By.cssSelector(".home-score")), driver2);
-	                    String awayExtra = safeText(extra.findElement(By.cssSelector(".away-score")), driver2);
-	                    score = homeExtra + "-" + awayExtra;
-	                    isOvertime = true;
-	                }
+					// 🔹 Eğer uzatma varsa, uzatma skorunu al
+					List<WebElement> extraBoards = match
+							.findElements(By.cssSelector(".extra-time-line.finished .board"));
+					if (!extraBoards.isEmpty()) {
+						WebElement extra = extraBoards.get(0);
+						String homeExtra = safeText(extra.findElement(By.cssSelector(".home-score")), driver2);
+						String awayExtra = safeText(extra.findElement(By.cssSelector(".away-score")), driver2);
+						score = homeExtra + "-" + awayExtra;
+						isOvertime = true;
+					}
 
-	                if (isOvertime)
-	                    System.out.println("🏀 (Uzatma) " + home + " - " + away + " → " + score);
-	                else
-	                    System.out.println("🏀 " + home + " - " + away + " → " + score);
+					if (isOvertime)
+						System.out.println("🏀 (Uzatma) " + home + " - " + away + " → " + score);
+					else
+						System.out.println("🏀 " + home + " - " + away + " → " + score);
 
-	                scores.put(home + " - " + away, score);
+					scores.put(home + " - " + away, score);
 
-	            } catch (Exception e) {
-	                System.out.println("⚠️ Basketbol maç hatası: " + e.getMessage());
-	            }
-	        }
+				} catch (Exception e) {
+					System.out.println("⚠️ Basketbol maç hatası: " + e.getMessage());
+				}
+			}
 
-	        System.out.println("🏀 Bitmiş basket maç sayısı: " + scores.size());
+			System.out.println("🏀 Bitmiş basket maç sayısı: " + scores.size());
 
-	    } catch (Exception e) {
-	        System.out.println("fetchFinishedScoresBasket hata: " + e.getMessage());
-	    }
-	    return scores;
+		} catch (Exception e) {
+			System.out.println("fetchFinishedScoresBasket hata: " + e.getMessage());
+		}
+		return scores;
 	}
-
 
 	// =============================================================
 	// ⏪ Gece 00:00–06:00 arası "Dün" sekmesine geç
@@ -185,7 +189,7 @@ public class MatchScraper {
 			Thread.sleep(1000);
 
 			LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
-			//if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
+			if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
 
 				List<WebElement> tabs = driver
 						.findElements(By.xpath("//span[contains(@class,'menu-item') and contains(@class,'tab')]"));
@@ -209,9 +213,9 @@ public class MatchScraper {
 					System.out.println("⚠️ Dün sekmesi bulunamadı.");
 				}
 
-			//} else {
-				//System.out.println("📅 Şu an bugün sekmesi aktif, geçiş yapılmadı.");
-			//}
+			} else {
+				System.out.println("📅 Şu an bugün sekmesi aktif, geçiş yapılmadı.");
+			}
 
 		} catch (Exception e) {
 			System.out.println("⚠️ Dün sekmesine geçilemedi: " + e.getMessage());

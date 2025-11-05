@@ -9,7 +9,7 @@ public class Application {
 		try {
 			scraper = new MatchScraper();
 			
-			//Map<String, String> updatedScores = scraper.fetchFinishedScores();
+			Map<String, String> updatedScores = scraper.fetchFinishedScores();
 			
 //			System.out.println("----- Güncellenen Skorlar (" + updatedScores.size() + ") -----");
 //			for (Map.Entry<String, String> entry : updatedScores.entrySet()) {
@@ -17,7 +17,7 @@ public class Application {
 //			}
 //			System.out.println("--------------------------------------------");
 			
-			//PredictionUpdater.updateFromGithub(updatedScores, "");
+			PredictionUpdater.updateFromGithub(updatedScores, "");
 			
 			//Basketbol
 			
@@ -29,7 +29,7 @@ public class Application {
 //			}
 //			System.out.println("--------------------------------------------");
 			
-			//PredictionUpdater.updateFromGithub(updatedScoresBasketbol, "basketbol-");
+			PredictionUpdater.updateFromGithub(updatedScoresBasketbol, "basketbol-");
 
 		} catch (Exception e) {
 			System.out.println("GENEL HATA: " + e.getMessage());
