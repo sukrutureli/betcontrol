@@ -31,7 +31,7 @@ public class PredictionUpdater {
 	    System.out.println("📥 JSON indiriliyor: " + url);
 
 	    // 🔹 GitHub Personal Access Token (örneğin env değişkeninden)
-	    String token = System.getenv("GITHUB_TOKEN"); // veya sabit test için: "ghp_XXXXXXXXXXXX"
+	    String token = System.getenv("ADMIN_USER"); // veya sabit test için: "ghp_XXXXXXXXXXXX"
 
 	    if (token == null || token.isEmpty()) {
 	        throw new RuntimeException("❌ GITHUB_TOKEN environment variable not set!");
