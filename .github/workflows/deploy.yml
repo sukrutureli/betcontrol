@@ -62,5 +62,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git commit -m "📦 Update public HTML $(date +'%Y-%m-%d %H:%M')" || echo "No changes"
-          git push "https://${{ secrets.DEPLOY_TOKEN_CONTROL }}@github.com/sukrutureli/bettingsukru.git" main
+          git push "https://${{ secrets.ADMIN_USER }}@github.com/sukrutureli/bettingsukru.git" main
 
