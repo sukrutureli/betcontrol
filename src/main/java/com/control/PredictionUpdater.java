@@ -17,87 +17,89 @@ public class PredictionUpdater {
 	 * versiyonunu "data/2025-10-16-updated.json" olarak kaydeder.
 	 */
 	public static void updateFromGithub(Map<String, String> updatedScores, String prefix) throws IOException {
-	    String day;
-	    LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
-	    if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
-	        day = LocalDate.now(ZoneId.of("Europe/Istanbul")).minusDays(1)
-	                .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-	    } else {
-	        day = LocalDate.now(ZoneId.of("Europe/Istanbul")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-	    }
+		String day;
+		LocalTime now = LocalTime.now(ZoneId.of("Europe/Istanbul"));
+		if (now.isAfter(LocalTime.MIDNIGHT) && now.isBefore(LocalTime.of(6, 0))) {
+			day = LocalDate.now(ZoneId.of("Europe/Istanbul")).minusDays(1)
+					.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		} else {
+			day = LocalDate.now(ZoneId.of("Europe/Istanbul")).format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+		}
 
-	    // 🔹 Private repo'dan dosya URL'si (raw)
-	    String url = "https://raw.githubusercontent.com/sukrutureli/bettingsukru/main/data/" + prefix + day + ".json";
-	    System.out.println("📥 JSON indiriliyor: " + url);
+		// 🔹 Private repo'dan dosya URL'si (raw)
+		String url = "https://raw.githubusercontent.com/sukrutureli/bettingsukru/main/data/" + prefix + day + ".json";
+		System.out.println("📥 JSON indiriliyor: " + url);
 
-	    // 🔹 GitHub Personal Access Token (örneğin env değişkeninden)
-	    String token = System.getenv("GITHUB_TOKEN"); // veya sabit test için: "ghp_XXXXXXXXXXXX"
+		// 🔹 GitHub Personal Access Token (örneğin env değişkeninden)
+		String token = System.getenv("GITHUB_TOKEN"); // veya sabit test için: "ghp_XXXXXXXXXXXX"
 
-	    if (token == null || token.isEmpty()) {
-	        throw new RuntimeException("❌ GITHUB_TOKEN environment variable not set!");
-	    }
+		if (token == null || token.isEmpty()) {
+			throw new RuntimeException("❌ GITHUB_TOKEN environment variable not set!");
+		}
 
-	    // 🔹 Token ile HTTP isteği yap
-	    HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
-	    conn.setRequestMethod("GET");
-	    conn.setRequestProperty("Authorization", "token " + token);
-	    conn.setRequestProperty("Accept", "application/vnd.github.v3.raw");
+		// 🔹 Token ile HTTP isteği yap
+		HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+		conn.setRequestMethod("GET");
+		conn.setRequestProperty("Authorization", "token " + token);
+		conn.setRequestProperty("Accept", "application/vnd.github.v3.raw");
 
-	    int status = conn.getResponseCode();
-	    if (status != 200) {
-	        throw new IOException("GitHub dosya indirme hatası: HTTP " + status);
-	    }
+		int status = conn.getResponseCode();
+		if (status != 200) {
+			throw new IOException("GitHub dosya indirme hatası: HTTP " + status);
+		}
 
-	    // 🔹 JSON parse et
-	    List<PredictionData> predictions;
-	    try (InputStream in = conn.getInputStream()) {
-	        predictions = mapper.readerForListOf(PredictionData.class).readValue(in);
-	    }
+		// 🔹 JSON parse et
+		List<PredictionData> predictions;
+		try (InputStream in = conn.getInputStream()) {
+			predictions = mapper.readerForListOf(PredictionData.class).readValue(in);
+		}
 
-	    // 🔹 Güncelleme işlemleri...
-	    for (PredictionData p : predictions) {
-	        String home = p.getHomeTeam();
-	        String away = p.getAwayTeam();
-	        String matchedKey = null;
-	        int count = 0;
+		// 🔹 Güncelleme işlemleri...
+		for (PredictionData p : predictions) {
+			String home = p.getHomeTeam();
+			String away = p.getAwayTeam();
+			String matchedKey = null;
+			int count = 0;
 
-	        for (String key : updatedScores.keySet()) {
-	            String[] parts = key.split(" - ");
-	            if (parts.length == 2) {
-	                String homeKey = parts[0];
-	                String awayKey = parts[1];
+			for (String key : updatedScores.keySet()) {
+				String[] parts = key.split(" - ");
+				if (parts.length == 2) {
+					String homeKey = parts[0];
+					String awayKey = parts[1];
 
-	                if (home.equals(homeKey) && away.equals(awayKey)) {
-	                    matchedKey = key;
-	                    count = 1;
-	                    break;
-	                }
+					if (home.equals(homeKey) && away.equals(awayKey)) {
+						matchedKey = key;
+						count = 1;
+						break;
+					}
 
-	                if (home.equals(homeKey) || away.equals(awayKey)) {
-	                    matchedKey = key;
-	                    count++;
-	                }
-	            }
-	        }
+					if (home.equals(homeKey) || away.equals(awayKey)) {
+						matchedKey = key;
+						count++;
+					}
+				}
+			}
 
-	        if (matchedKey != null && count == 1) {
-	            String score = updatedScores.get(matchedKey);
-	            p.setScore(score);
-	            evaluatePredictions(p, score, prefix.isEmpty() ? "Futbol" : "Basketbol");
-	        } else {
-	            System.out.println("⚠️ Eşleşme bulunamadı: " + p.getHomeTeam() + " - " + p.getAwayTeam());
-	        }
-	    }
+			if (matchedKey != null && count == 1) {
+				String score = updatedScores.get(matchedKey);
+				p.setScore(score);
+				evaluatePredictions(p, score, prefix.isEmpty() ? "Futbol" : "Basketbol");
+			} else {
+				System.out.println("⚠️ Eşleşme bulunamadı: " + p.getHomeTeam() + " - " + p.getAwayTeam());
+			}
+		}
 
-	    // 🔹 Kaydet
-	    File outDir = new File("public/data");
-	    if (!outDir.exists()) outDir.mkdirs();
-	    File outFile = new File(outDir, prefix + day + ".json");
-	    mapper.writerWithDefaultPrettyPrinter().writeValue(outFile, predictions);
+		// 🔹 Kaydet
+		File outDir = new File("public/data");
+		if (!outDir.exists())
+			outDir.mkdirs();
+		File outFile = new File(outDir, prefix + day + ".json");
+		mapper.writerWithDefaultPrettyPrinter().writeValue(outFile, predictions);
 
-	    System.out.println("✅ Güncellenmiş dosya: " + outFile.getAbsolutePath());
+		System.out.println("✅ Güncellenmiş dosya: " + outFile.getAbsolutePath());
+
+		HtmlGenerator.generateHtmlFromJson("data/" + prefix + day + ".json", "data/" + prefix + day + ".html");
 	}
-
 
 	/**
 	 * Skora göre "won/lost/pending" durumu belirler
