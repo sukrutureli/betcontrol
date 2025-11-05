@@ -59,8 +59,8 @@ jobs:
           git checkout main || git checkout --orphan main
           cp -r public/* .
           git add .
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "Şükrü Türeli"
+          git config user.email "sukrutureli@gmail.com"
           git commit -m "📦 Update public HTML $(date +'%Y-%m-%d %H:%M')" || echo "No changes"
           git push "https://${{ secrets.ADMIN_USER }}@github.com/sukrutureli/bettingsukru.git" main
 
