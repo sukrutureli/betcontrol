@@ -2,7 +2,6 @@ name: Build and Deploy to GitHub Pages
 
 on:
   schedule:
-    # UTC zamanında, her gün saat 02:00
     - cron: '0 23,4,16,19 * * *'
   workflow_dispatch:
 
@@ -30,7 +29,7 @@ jobs:
 
       - name: Build and Run Scraper
         env:
-          GITHUB_TOKEN: ${{ secrets.ADMIN_USER }}  # 🔹 işte burası
+          GITHUB_TOKEN: ${{ secrets.ADMIN_USER }}
         run: mvn clean compile exec:java
 
       - name: Upload public directory as artifact
@@ -44,33 +43,28 @@ jobs:
     needs: scraper
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-
       - name: Download public directory artifact
         uses: actions/download-artifact@v4
         with:
           name: public-html
           path: ./public
 
-      - name: 🔍 Test token access to target repo
+      - name: Push updated files to sukrutureli/bettingsukru
         env:
           TOKEN: ${{ secrets.TOKEN }}
         run: |
-          echo "Testing token access..."
-          curl -s -H "Authorization: Bearer $TOKEN" https://api.github.com/repos/sukrutureli/bettingsukru
-      
-      - name: Commit and push to bettingsukru
-        env:
-          TOKEN: ${{ secrets.TOKEN }}
-        run: |
-          git fetch origin main || true
-          git checkout main || git checkout --orphan main
-          cp -r public/* .
-          git add .
+          echo "🔹 Cloning target repo..."
+          git clone "https://x-access-token:${TOKEN}@github.com/sukrutureli/bettingsukru.git" target-repo
+          cd target-repo
+
+          echo "🔹 Copying updated files from public/..."
+          cp -r ../public/* .
+
+          echo "🔹 Committing changes..."
           git config user.name "Şükrü Türeli"
           git config user.email "sukrutureli@gmail.com"
-          git commit -m "📦 Update public HTML $(date +'%Y-%m-%d %H:%M')" || echo "No changes"
-      
-          echo "🔹 pushing to sukrutureli/bettingsukru..."
-          git push "https://x-access-token:${TOKEN}@github.com/sukrutureli/bettingsukru.git" HEAD:main
+          git add .
+          git commit -m "📦 Auto update public HTML $(date +'%Y-%m-%d %H:%M')" || echo "No changes to commit"
+
+          echo "🔹 Pushing to main branch..."
+          git push origin main
