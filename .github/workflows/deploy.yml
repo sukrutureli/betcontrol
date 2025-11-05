@@ -59,7 +59,7 @@ jobs:
         run: |
           echo "Testing token access..."
           curl -s -H "Authorization: Bearer $TOKEN" https://api.github.com/repos/sukrutureli/bettingsukru
-
+      
       - name: Commit only public folder to pages branch
         env:
           TOKEN: ${{ secrets.TOKEN }}
@@ -70,8 +70,7 @@ jobs:
           git add .
           git config user.name "Şükrü Türeli"
           git config user.email "sukrutureli@gmail.com"
-          git commit -m "📦 Update public HTML $(date +'%Y-%m-%d %H:%M')" || echo "No changed"
-          echo "x-access-token:$TOKEN" > /tmp/token.txt
-          git config credential.helper "store --file=/tmp/token.txt"
-          git push https://github.com/sukrutureli/bettingsukru.git main
+          git commit -m "📦 Update public HTML $(date +'%Y-%m-%d %H:%M')" || echo "No changes"
+          git push "https://x-access-token:$TOKEN@github.com/sukrutureli/bettingsukru.git" main
+
 
