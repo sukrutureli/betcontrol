@@ -23,7 +23,7 @@ public class HtmlGenerator {
 		StringBuilder html = new StringBuilder();
 		html.append("<!DOCTYPE html>\n<html lang='tr'>\n<head>\n").append("<meta charset='UTF-8'>\n")
 				.append("<meta name='viewport' content='width=device-width, initial-scale=1.0'>\n")
-				.append("<title>📅 Tahminler - BettingSukru</title>\n").append("<style>").append(FILES_STYLE)
+				.append("<title>📅 Tahminler - FatherTahmin</title>\n").append("<style>").append(FILES_STYLE)
 				.append("</style>\n</head>\n<body>\n")
 				.append("<h1>📅 Tahminler (" + jsonFile.getName().replace(".json", "") + ")</h1>\n")
 				.append("<div class='history-container'>\n");
@@ -89,7 +89,7 @@ public class HtmlGenerator {
 
 		// 🔹 Footer
 		html.append("</div>\n<footer>").append("Bu veriler geçmiş tahmin sonuçlarından otomatik oluşturulmuştur.<br>")
-				.append("<small>© 2025 BettingSukru</small>").append("</footer>\n</body>\n</html>");
+				.append("<small>© 2025 FatherTahmin</small>").append("</footer>\n</body>\n</html>");
 
 		// 🔹 Dosyaya yaz
 		Files.write(Paths.get(outputHtmlPath), html.toString().getBytes());
