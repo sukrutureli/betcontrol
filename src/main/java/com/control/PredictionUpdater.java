@@ -98,7 +98,8 @@ public class PredictionUpdater {
 
 		System.out.println("✅ Güncellenmiş dosya: " + outFile.getAbsolutePath());
 
-		HtmlGenerator.generateHtmlFromJson("public/data/" + prefix + day + ".json", "public/data/" + prefix + day + ".html");
+		HtmlGenerator.generateHtmlFromJson("public/data/" + prefix + day + ".json",
+				"public/data/" + prefix + day + ".html");
 	}
 
 	/**
